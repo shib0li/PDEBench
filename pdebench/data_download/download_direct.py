@@ -1,11 +1,30 @@
 from __future__ import annotations
-
+import sys
 import argparse
 from pathlib import Path
 
 import pandas as pd
 from torchvision.datasets.utils import download_url
 from tqdm import tqdm
+
+def cprint(color, text, **kwargs):
+    if color[0] == '*':
+        pre_code = '1;'
+        color = color[1:]
+    else:
+        pre_code = ''
+    code = {
+        'a': '30',
+        'r': '31',
+        'g': '32',
+        'y': '33',
+        'b': '34',
+        'p': '35',
+        'c': '36',
+        'w': '37'
+    }
+    print("\x1b[%s%sm%s\x1b[0m" % (pre_code, code[color], text), **kwargs)
+    sys.stdout.flush()
 
 
 def parse_metadata(pde_names):
@@ -74,8 +93,11 @@ def download_data(root_folder, pde_name):
 
     # Iterate filtered dataframe and download the files
     for _, row in tqdm(pde_df.iterrows(), total=pde_df.shape[0]):
-        file_path = Path(root_folder) / row["Path"]
-        download_url(row["URL"], file_path, row["Filename"], md5=row["MD5"])
+        try:
+            file_path = Path(root_folder) / row["Path"]
+            download_url(row["URL"], file_path, row["Filename"], md5=row["MD5"])
+        except:
+            cprint("r", f"******* Skip error occured at {row["Filename"]} *******")
 
 
 if __name__ == "__main__":
